@@ -1,3 +1,25 @@
+"""
+ntuple_jpsi_all.py
+------------------
+DaVinci options file: reads LHCb 2012 open data .dst files and writes a flat
+ROOT ntuple of B+ -> J/psi(-> mu+ mu-) K+ candidates.
+ 
+You do not run this file directly. It is handed to gaudirun.py, which is what
+actually starts DaVinci:
+ 
+    lb-run DaVinci/v45r8 gaudirun.py ntuple_jpsi_all.py
+ 
+and in practice run_parallel_all.py does that for you, once per chunk of
+input files. An "options file" in the Gaudi framework is not a script that
+does work - it is Python that *configures* a set of C++ algorithms, and the
+event loop only starts after this file has finished executing.
+ 
+Which files to read is passed in through environment variables rather than
+command-line arguments, because gaudirun.py owns the command line. That is
+the only reason this file looks different from a standard DaVinci example.
+"""
+
+
 import os
 
 from Configurables import DecayTreeTuple
@@ -6,23 +28,14 @@ from DecayTreeTuple.Configuration import *
 from PhysConf.Filters import LoKi_Filters
 from GaudiConf import IOHelper
 
-# ---------------------------------------------------------------------------
-# This is the same options file you already had working, with three changes:
-#   * the input files come from filelist.txt (XRootD URLs, nothing downloaded)
-#   * which slice of that list to run is set by environment variables, so
-#     run_all.py can drive it chunk by chunk
-#   * an optional stripping prefilter, which makes the job much faster
-# You never need to edit this file by hand - run_all.py sets everything.
-# ---------------------------------------------------------------------------
+stream = 'Dimuon' # Change this part to match the descriptors of your decay
+line = 'Bs2MuMuLinesBu2JPsiKFullDSTLine' # Change this part to match the descriptors of your decay
 
-stream = 'Dimuon'
-line = 'Bs2MuMuLinesBu2JPsiKFullDSTLine'
-
-filelist = os.environ.get('JPSI_FILELIST', 'filelist.txt')
-start = int(os.environ.get('JPSI_START', '0'))
-nfiles = int(os.environ.get('JPSI_NFILES', '1'))
-outfile = os.environ.get('JPSI_OUT', 'DVntuple_jpsi_part.root')
-prefilter = os.environ.get('JPSI_PREFILTER', '1') == '1'
+filelist = os.environ.get('JPSI_FILELIST', 'filelist.txt') # Rename this part to match your decay
+start = int(os.environ.get('JPSI_START', '0')) # Rename this part to match your decay
+nfiles = int(os.environ.get('JPSI_NFILES', '1')) # Rename this part to match your decay
+outfile = os.environ.get('JPSI_OUT', 'DVntuple_jpsi_part.root') # Rename this part to match your decay
+prefilter = os.environ.get('JPSI_PREFILTER', '1') == '1' # Rename this part to match your decay
 
 with open(filelist) as handle:
     all_files = [ln.strip() for ln in handle if ln.strip() and not ln.startswith('#')]
@@ -42,9 +55,11 @@ if prefilter:
     )
     DaVinci().EventPreFilters = filters.filters('Filters')
 
-dtt = DecayTreeTuple('TupleBu2JpsiK')
-dtt.Inputs = ['/Event/{0}/Phys/{1}/Particles'.format(stream, line)]
-dtt.Decay = '[B+ -> ^(J/psi(1S) -> ^mu+ ^mu-) ^K+]CC'
+dtt = DecayTreeTuple('TupleBu2JpsiK') # Change this part to match the descriptors of your decay
+dtt.Inputs = ['/Event/{0}/Phys/{1}/Particles'.format(stream, line)] # Doesn't need changing unless you are analyzing .mdst files as well as .dst ones.
+dtt.Decay = '[B+ -> ^(J/psi(1S) -> ^mu+ ^mu-) ^K+]CC' # Change this part to match the descriptors of your decay
+
+# The following lines shouldn't need changing if you are working with 2012 run-1 data:
 
 DaVinci().UserAlgorithms += [dtt]
 DaVinci().InputType = 'DST'
