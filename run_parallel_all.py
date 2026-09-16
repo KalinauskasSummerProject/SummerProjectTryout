@@ -2,16 +2,16 @@
 """
 run_parallel_all.py
 -------------------
-Same job as run_all.py, but runs several DaVinci jobs side by side so more
+Runs several DaVinci jobs side by side so more
 than one core is doing work.
 
     python make_filelist.py                    # once
-    python run_parallel_all.py --workers 4     # 4 jobs at a time
+    python run_parallel_all.py --workers 4     # 4 jobs at a time (4 processors)
     python run_parallel_all.py --merge-only    # just hadd what exists
 
 Chunks are handed out to a pool of worker threads; each worker launches its
 own DaVinci process and waits for it. Finished chunks get a .done marker, so
-Ctrl-C and rerun still works exactly as before - in-flight chunks are simply
+Ctrl-C and rerun still works - in-flight chunks are simply
 redone next time.
 
 Each DaVinci process needs roughly 1-1.5 GB of RAM, so keep
@@ -19,7 +19,17 @@ Each DaVinci process needs roughly 1-1.5 GB of RAM, so keep
 Output is per-chunk, so nothing races: ntuples/DVntuple_jpsi_NNNNNN.root
 and logs/davinci_NNNNNN.log.
 
-Works with either Python 2 or Python 3.
+The text file filelist.txt has every URL of the files provided with the stripping line.
+One can download this .txt file by clicking the "Download index" button in the "Index description" 
+tab of the line. Rename it filelist.txt and drop it into your working directory for 
+run_parallel_all.py to be able to find it.
+
+The script takes in an OPTIONS file 'ntuple_jpsi_all.py' which was configured for my 
+specific decay B+ -> J/psi(-> mu+ mu-) K+. Thus, one would need to modify said file 
+to match the expected parameters of their line before running 'run_parallel_all.py'.
+
+The script outputs everything into a root ntuple called "DVntuple_jpsi_all.root", where
+the data associated with the decay is stored.
 """
 
 from __future__ import print_function
@@ -39,16 +49,14 @@ except ImportError:       # Python 3
     import queue
 
 # --------------------------------------------------------------------------
-FILELIST = 'filelist_magup.txt'
-OPTIONS = 'ntuple_jpsi_all.py'
+FILELIST = 'filelist.txt'
+OPTIONS = 'ntuple_jpsi_all.py' # Rename this part to match your decay
 OUTDIR = 'ntuples'
 LOGDIR = 'logs'
-MERGED = 'DVntuple_jpsi_all.root'
+MERGED = 'DVntuple_jpsi_all.root' # Rename this part to match your decay
 
-# Override without editing this file, e.g.
-#   export JPSI_DAVINCI="lb-run DaVinci/v45r6 gaudirun.py"
-DAVINCI = os.environ.get('JPSI_DAVINCI', 'lb-run DaVinci/v45r8 gaudirun.py').split()
-HADD = os.environ.get('JPSI_HADD', 'lb-run DaVinci/v45r8 hadd').split()
+DAVINCI = os.environ.get('JPSI_DAVINCI', 'lb-run DaVinci/v45r8 gaudirun.py').split() # Rename this part to match your decay
+HADD = os.environ.get('JPSI_HADD', 'lb-run DaVinci/v45r8 hadd').split() # Rename this part to match your decay
 
 EVENT_RE = re.compile(r'Reading Event record\s+(\d+)')
 
