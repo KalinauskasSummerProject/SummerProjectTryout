@@ -15,7 +15,7 @@ large file produced locally is the ntuple.
 | --- | --- |
 | Entries | 533608 |
 | m(B⁺), double Gaussian + exponential | 5284.14 MeV/c² |
-| σ_eff | 0.04 MeV/c² |
+| σ_eff | 18.47 MeV/c² |
 | χ²/ndf, single Gaussian | 9.46 |
 | χ²/ndf, double Gaussian | 3.56 |
 | PDG m(B⁺) | 5279.34 MeV/c² |
