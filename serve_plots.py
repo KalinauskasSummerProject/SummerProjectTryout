@@ -9,6 +9,10 @@ Run it OUTSIDE the lb-run container, in its own terminal, and leave it going:
 
     python3 serve_plots.py ~/data 8000
 
+Or run this line anywhere (doesn't matter if it's in the same container):
+
+    nohup python3 ~/data/serve_plots.py ~/data 8000 > ~/serve_plots.log 2>&1 &
+
 Then open http://localhost:8000/ in Windows. WSL2 forwards localhost to the
 Windows host, so nothing else needs configuring.
 
