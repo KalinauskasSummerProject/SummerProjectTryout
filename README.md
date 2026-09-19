@@ -88,8 +88,8 @@ Selection: `Kplus_PIDK > 2`, `Bplus_DIRA_OWNPV > 0.9999`,
 | J/ψ, MagUp | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
 | J/ψ, MagDown | 55 664 | 3099.13 ± 0.06 | 13.54 | 1.47 |
 
-The DTF row covers fewer candidates only because that ntuple is still being
-produced; it is not a selection effect.
+The DTF row covers fewer candidates only because I parsed through fewer .dst files 
+for that ntuple; it is not a selection effect.
 
 A single Gaussian gives a clearly worse χ²/ndf than the double Gaussian on the
 same data, which is the justification for the extra two parameters. The
