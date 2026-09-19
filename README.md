@@ -7,18 +7,79 @@ Second-year undergraduate summer project. Everything here runs on a laptop:
 the data is streamed from CERN over XRootD rather than downloaded, so the only
 large file produced locally is the ntuple.
 
-[B+ mass peak](Bplus_double_gaussian_magup.png)
+![B+ mass peak](Bplus_double_gaussian_magup.png)
 
-## Results
+## Main result: an uncalibrated momentum scale
 
-| Quantity | Value |
-| --- | --- |
-| Entries | 533608 |
-| m(B⁺), double Gaussian + exponential | 5284.14 MeV/c² |
-| σ_eff | 18.47 MeV/c² |
-| χ²/ndf, single Gaussian | 9.46 |
-| χ²/ndf, double Gaussian | 3.56 |
-| PDG m(B⁺) | 5279.34 MeV/c² |
+Both reconstructed masses come out consistently **above** their PDG values, by
+about one part in a thousand:
+
+| Peak | Measured | PDG | Offset | Fractional |
+| --- | --- | --- | --- | --- |
+| m(B⁺), unconstrained | 5284.03 ± 0.03 MeV/c² | 5279.34 | +4.69 MeV/c² | +8.9 × 10⁻⁴ |
+| m(J/ψ), unconstrained | 3100.24 ± 0.01 MeV/c² | 3096.90 | +3.34 MeV/c² | +10.8 × 10⁻⁴ |
+| m(B⁺), J/ψ mass constrained (DTF) | 5280.81 ± 0.03 MeV/c² | 5279.34 | +1.47 MeV/c² | +2.8 × 10⁻⁴ |
+
+Two independent peaks, built from different final states, give the same
+fractional shift in the same direction. That points at the momentum scale
+rather than at either decay: the open data release is not calibrated for it,
+so every reconstructed momentum is slightly too large and every invariant mass
+follows.
+
+The J/ψ offset is the larger of the two in fractional terms, which is what one
+would expect. Its mass comes almost entirely from the muon momenta, whereas
+m(B⁺) picks up a contribution from the kaon's rest mass, which no momentum
+scale error can touch.
+
+**DecayTreeFitter removes most of it.** Constraining the dimuon mass to the
+known J/ψ mass forces the muon momenta onto the right scale, so only the
+kaon's share of the bias survives — and +1.47 MeV/c² is close to a third of
++4.69, which is roughly the kaon's share of the sensitivity. See
+`Bplus_dg_dtf.png` against `Bplus_double_gaussian_magup.png` for the
+before-and-after, and `Jpsi_dg_cuts.png` for the dimuon peak that motivates
+the interpretation.
+
+### A mass window is not a substitute
+
+An early version of the selection required the measured dimuon mass to lie
+within 10 MeV/c² of the **PDG** J/ψ mass. Because the observed J/ψ peak sits
+2.5 MeV/c² higher than that, the window was offset relative to the data and
+preferentially kept candidates whose muon momenta had fluctuated downward.
+The fitted m(B⁺) duly dropped to 5281.90 — closer to the PDG value, and wrong.
+
+Recentring the same window on the **observed** peak restored 5284.03 with the
+width essentially unchanged (12.29 → 12.33 MeV/c²), confirming that the shift
+was selection bias rather than a real improvement.
+
+The general point: a cut can only discard candidates, never correct the ones
+it keeps. DecayTreeFitter refits each candidate instead, which is why it can
+remove a bias that no selection can.
+
+## Fit results
+
+All fits use a double Gaussian sharing a mean, plus an exponential background.
+Selection: `Kplus_PIDK > 2`, `Bplus_DIRA_OWNPV > 0.9999`,
+`Bplus_FDCHI2_OWNPV > 100`, `Bplus_IPCHI2_OWNPV < 25`,
+`Bplus_ENDVERTEX_CHI2 < 20`.
+
+| Fit | Entries | Mass (MeV/c²) | σ_eff (MeV/c²) | χ²/ndf |
+| --- | --- | --- | --- | --- |
+| B⁺, loose cuts | 533 608 | 5284.14 ± 0.04 | 18.47 | 3.56 |
+| B⁺, full cuts | 365 237 | 5284.03 ± 0.03 | 12.33 | 1.21 |
+| B⁺, full cuts + DTF | 156 290 | 5280.81 ± 0.03 | 9.72 | 1.33 |
+| J/ψ, no cuts | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
+
+The DTF row covers fewer candidates only because that ntuple is still being
+produced; it is not a selection effect.
+
+A single Gaussian gives a clearly worse χ²/ndf than the double Gaussian on the
+same data, which is the justification for the extra two parameters. The
+residual χ²/ndf above 1 is dominated by the radiative tail: final-state
+radiation and J/ψ → μ⁺μ⁻γ remove energy, so the true peak is asymmetric on the
+low side while two Gaussians sharing a mean are symmetric by construction.
+This is most visible in the J/ψ fit, where the statistics are largest. A
+Crystal Ball function would be the standard remedy; the masses quoted above
+may shift by a few tenths of an MeV/c² once that is done.
 
 ## Data
 
@@ -53,9 +114,16 @@ full sample on four cores. It is resumable: each finished chunk leaves a
 `.done` marker, so an interrupted run picks up where it stopped.
 
 ```bash
-python run_parallel_all.py --workers 4
 python run_parallel_all.py --workers 4 --max-files 10   # short smoke test first
+python run_parallel_all.py --workers 4                  # the real run
 python run_parallel_all.py --merge-only                 # just re-merge what exists
+```
+
+The DecayTreeFitter ntuple is produced separately, by the same driver pointed
+at a different options file and its own output directory:
+
+```bash
+python run_parallel_dtf.py --workers 4
 ```
 
 Fit and plot:
@@ -63,7 +131,19 @@ Fit and plot:
 ```bash
 lb-run DaVinci/v45r8 python plot_single_gaussian.py DVntuple_jpsi_all.root
 lb-run DaVinci/v45r8 python plot_double_gaussian.py DVntuple_jpsi_all.root
+lb-run DaVinci/v45r8 python plot_jpsi_double_gaussian.py DVntuple_jpsi_all.root
+lb-run DaVinci/v45r8 python plot_bplus_dg_dtf.py DVntuple_jpsidtf_all.root
 ```
+
+The plotting scripts print a `localhost` link to the figure they just saved,
+served by `serve_plots.py`. Start the server once per session first:
+
+```bash
+nohup python3 serve_plots.py ~/data 8000 > ~/serve_plots.log 2>&1 &
+```
+
+Delete the `from show import show` and `show(...)` lines from a plotting
+script if you would rather it just wrote the PNG and said nothing.
 
 ## What each script does
 
@@ -71,12 +151,20 @@ lb-run DaVinci/v45r8 python plot_double_gaussian.py DVntuple_jpsi_all.root
 | --- | --- |
 | `make_filelist.py` | Fetches the XRootD URLs for an open data record |
 | `ntuple_jpsi_all.py` | DaVinci options file: DSTs in, flat ntuple out |
+| `ntuple_jpsidtf_all.py` | The same, with DecayTreeFitter added |
 | `run_parallel_all.py` | Runs several DaVinci jobs at once, then merges |
+| `run_parallel_dtf.py` | The same driver, pointed at the DTF options file |
 | `plot_single_gaussian.py` | Gaussian + exponential fit to the B⁺ peak |
 | `plot_double_gaussian.py` | Narrow core + wide component, for the resolution mixture |
+| `plot_jpsi_double_gaussian.py` | The same fit applied to the dimuon peak |
+| `plot_bplus_dg_dtf.py` | Double Gaussian fit to the DTF-refitted B⁺ mass |
 | `show.py`, `serve_plots.py` | View plots in a browser without copying files out of WSL |
 
-`ntuple_jpsi_all.py` is never run directly. `run_parallel_all.py` passes it to
+`run_parallel_dtf.py` is `run_parallel_all.py` with five configuration
+constants changed. Kept as a separate file deliberately, so that a run in
+progress cannot be redirected by editing the other one.
+
+The options files are never run directly. The drivers pass them to
 `gaudirun.py` once per chunk, handing over the file range in environment
 variables.
 
@@ -87,23 +175,23 @@ Change `stream` and `line` in `ntuple_jpsi_all.py` to your stripping line, and
 `FILELIST`, `OPTIONS`, `OUTDIR`, `LOGDIR` and `MERGED`, plus the per-chunk
 filename inside `run_one` and the matching marker pattern in `main`.
 
-Two things that bite:
+Three things that bite:
 
-- Give a new tupling its own `OUTDIR`. Stale `.done` markers make every chunk
-  look finished, and `merge()` globs `*.root` from that directory, so two
-  tuplings sharing one would be silently merged into each other.
+- Give a new tupling its own `OUTDIR`. The `.done` markers are keyed by index
+  into the file list, not by filename, so stale markers make chunks look
+  finished that were never run — and `merge()` globs `*.root` from that
+  directory, so two tuplings sharing one would be silently merged together.
 - Branch prefixes follow the decay descriptor, not reality. The hadron's
   branches are `Kplus_*` whether or not the track is a kaon, which is why
   `Kplus_PIDK` is worth cutting on.
+- The DecayTreeFitter outputs are arrays indexed by primary vertex candidate,
+  so the plotting scripts read `Bplus_ConsJpsi_M[0]` with the cut
+  `Bplus_ConsJpsi_status[0]==0`. Index 0 is the best PV.
 
 If the line writes to microDST rather than full DST, set
 `DaVinci().RootInTES` and give `dtt.Inputs` the relative path instead.
 
 ## Notes
-
-The data is uncalibrated for momentum scale, so the reconstructed masses sit
-roughly 5 MeV above the PDG values. Constraining the J/ψ mass with
-DecayTreeFitter improves the resolution considerably.
 
 Ntuples, logs and per-chunk outputs are not tracked — see `.gitignore`. Rerun
 the pipeline to regenerate them.
