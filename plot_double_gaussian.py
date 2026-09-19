@@ -30,10 +30,12 @@ BINW = 1.0 # Change bin width
 NBINS = int(round((MHI - MLO) / BINW))   
 
 BRANCH = 'Bplus_M' # Change the branch of the stripping line
-CUT = ('Kplus_PIDK > 10' # Log-likelihood comparison of K^+ candidates vs pi^+ candidates
-       ' && Bplus_FDCHI2_OWNPV > 100' # flight distance significance
-       ' && Bplus_IPCHI2_OWNPV < 25' # impact parameter significance
-       ' && Bplus_ENDVERTEX_CHI2 < 20') # vertex fit quality, the three tracks must meet at a common point.
+CUT = ('Kplus_PIDK > 2'                      # Log-likelihood comparison of K^+ candidates vs pi^+ candidates
+       ' && Bplus_DIRA_OWNPV > 0.9999'       # The cosine of the angle between the B⁺ momentum vector and the line from the primary vertex to its decay vertex.
+       #' && abs(J_psi_1S_MM - 3096.9) < 10'  # Jpsi mass constraint
+       ' && Bplus_FDCHI2_OWNPV > 100'        # flight distance significance
+       ' && Bplus_IPCHI2_OWNPV < 25'         # impact parameter significance
+       ' && Bplus_ENDVERTEX_CHI2 < 20')      # vertex fit quality, the three tracks must meet at a common point.
 
 # Pad layout. ROOT text sizes are fractions of the PAD height, so fix a target
 # size in canvas units and divide by each pad's height fraction.
