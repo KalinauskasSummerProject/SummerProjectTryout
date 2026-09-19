@@ -31,6 +31,24 @@ would expect. Its mass comes almost entirely from the muon momenta, whereas
 m(B⁺) picks up a contribution from the kaon's rest mass, which no momentum
 scale error can touch.
 
+Both magnet polarities show the effect. The 2012 data was taken with the
+dipole field in both directions, and the samples are processed and fitted
+independently:
+
+| Polarity | m(J/ψ) | Offset | Fractional |
+| --- | --- | --- | --- |
+| MagUp | 3100.24 ± 0.01 MeV/c² | +3.34 MeV/c² | +10.8 × 10⁻⁴ |
+| MagDown | 3099.13 ± 0.06 MeV/c² | +2.23 MeV/c² | +7.2 × 10⁻⁴ |
+
+Same sign, same order of magnitude, from data taken with opposite field
+directions — so the shift is not an artefact of one dataset. The two are not
+identical, however: MagUp sits about 1.1 MeV/c² higher than MagDown. A
+residual polarity dependence on top of the overall scale is expected, since
+reversing the field reverses the direction in which any detector misalignment
+displaces a track, and the two do not cancel exactly. Quoting the average of
+the polarities is the usual way to suppress it. See
+`Jpsi_double_gaussian_magdown.png`.
+
 **DecayTreeFitter removes most of it.** Constraining the dimuon mass to the
 known J/ψ mass forces the muon momenta onto the right scale, so only the
 kaon's share of the bias survives — and +1.47 MeV/c² is close to a third of
@@ -67,17 +85,21 @@ Selection: `Kplus_PIDK > 2`, `Bplus_DIRA_OWNPV > 0.9999`,
 | B⁺, loose cuts | 533 608 | 5284.14 ± 0.04 | 18.47 | 3.56 |
 | B⁺, full cuts | 365 237 | 5284.03 ± 0.03 | 12.33 | 1.21 |
 | B⁺, full cuts + DTF | 156 290 | 5280.81 ± 0.03 | 9.72 | 1.33 |
-| J/ψ, no cuts | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
+| J/ψ, MagUp | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
+| J/ψ, MagDown | 55 664 | 3099.13 ± 0.06 | 13.54 | 1.47 |
 
-The DTF row covers fewer candidates only because I didn't parse through as many 
-.dst files with that ntuple; it is not a selection effect.
+The DTF row covers fewer candidates only because that ntuple is still being
+produced; it is not a selection effect.
 
 A single Gaussian gives a clearly worse χ²/ndf than the double Gaussian on the
 same data, which is the justification for the extra two parameters. The
 residual χ²/ndf above 1 is dominated by the radiative tail: final-state
 radiation and J/ψ → μ⁺μ⁻γ remove energy, so the true peak is asymmetric on the
 low side while two Gaussians sharing a mean are symmetric by construction.
-This is most visible in the J/ψ fit, where the statistics are largest. A
+This is most visible in the MagUp J/ψ fit, where the statistics are largest:
+the MagDown fit of the same shape reaches χ²/ndf 1.47 on a sample 28 times
+smaller, not because the model fits better but because the statistical errors
+are large enough to hide the mismatch. A
 Crystal Ball function would be the standard remedy; the masses quoted above
 may shift by a few tenths of an MeV/c² once that is done.
 
@@ -91,6 +113,9 @@ CERN Open Data Portal, LHCb 2012, Stripping21r0p2, DIMUON stream:
 | [28064](https://opendata.cern.ch/record/28064) | MagDown | 4591 |
 
 Candidates come from the stripping line `Bs2MuMuLinesBu2JPsiKFullDSTLine`.
+Both polarities have been processed; each is tupled separately and kept in its
+own output directory, since mixing them would average away the polarity
+dependence described above.
 
 ## Requirements
 
