@@ -2,8 +2,9 @@
 """
 run_parallel_all.py
 -------------------
-Same job as run_all.py, but runs several DaVinci jobs side by side so more
-than one core is doing work.
+Same job as run_parallel_all.py, but applies the DecayTreeFitter (DTF) function provided by ROOT. 
+This fixes the J/psi mass to its known value, and gets rid of a lot of the bias pulling the mass of
+the Bplus particle up.
 
     python make_filelist.py                    # once
     python run_parallel_all.py --workers 4     # 4 jobs at a time
