@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 """
-run_parallel_all.py
+run_parallel_dtf.py
 -------------------
-Same job as run_parallel_all.py, but applies the DecayTreeFitter (DTF) function provided by ROOT. 
-This fixes the J/psi mass to its known value, and gets rid of a lot of the bias pulling the mass of
-the Bplus particle up.
+Produces the DecayTreeFitter version of the ntuple. This is the same driver
+as run_parallel_all.py - same threading, same resume behaviour - and differs
+only in the five configuration constants below, which point it at
+ntuple_jpsidtf_all.py and at its own output directories.
 
     python make_filelist.py                    # once
-    python run_parallel_all.py --workers 4     # 4 jobs at a time
-    python run_parallel_all.py --merge-only    # just hadd what exists
+    python run_parallel_dtf.py --workers 4     # 4 jobs at a time
+    python run_parallel_dtf.py --merge-only    # just hadd what exists
 
 Chunks are handed out to a pool of worker threads; each worker launches its
 own DaVinci process and waits for it. Finished chunks get a .done marker, so
@@ -17,10 +18,67 @@ redone next time.
 
 Each DaVinci process needs roughly 1-1.5 GB of RAM, so keep
     workers x 1.5 GB  <  the "memory=" line in your .wslconfig
-Output is per-chunk, so nothing races: ntuples/DVntuple_jpsi_NNNNNN.root
-and logs/davinci_NNNNNN.log.
+Output is per-chunk, so nothing races: ntuples_jpsidtf/DVntuple_jpsi_NNNNNN.root
+and logs_jpsidtf/davinci_NNNNNN.log.
 
 Works with either Python 2 or Python 3.
+
+--- What DecayTreeFitter is, and why this second ntuple exists ---------------
+
+The plain ntuple stores m(B+) as reconstructed: the momenta of the two muons
+and the kaon are measured independently, and the invariant mass is computed
+from them directly. Every measurement error in those momenta propagates
+straight into the mass.
+
+DecayTreeFitter (DTF) instead refits the whole decay chain at once, subject to
+constraints we know must hold:
+
+  * the two muons came from a common vertex, and so did the J/psi and the kaon
+  * the dimuon mass is exactly the known J/psi mass
+  * the B+ momentum points back at the primary vertex
+
+It adjusts every track's parameters, within their uncertainties, until those
+constraints are satisfied, then rebuilds m(B+) from the adjusted momenta.
+
+Two things follow, and both are visible in the fits:
+
+  * Better resolution. Pinning m(J/psi) removes the dimuon mass uncertainty
+    from the result, so the B+ peak narrows considerably.
+  * A smaller bias. LHCb's momentum scale in this open data is uncalibrated,
+    which shifts reconstructed masses upward by about one part in a thousand.
+    Constraining the J/psi to its known mass forces the muon momenta to the
+    right scale, so only the kaon's share of the bias survives.
+
+Note that a mass CUT does neither of these. Requiring the measured dimuon mass
+to sit near the PDG value only discards candidates; it cannot correct the ones
+it keeps, and centring such a window on the PDG value rather than on the
+observed peak biases the result. DTF corrects rather than selects.
+
+The cost is CPU time - a vertex refit per candidate - and disk, since the
+extra branches roughly double the ntuple size.
+
+The results appear in the ntuple as Bplus_ConsJpsi_*, named after the
+'TupleToolDecayTreeFitter/ConsJpsi' instance in ntuple_jpsidtf_all.py. The
+originals (Bplus_M and friends) are still there untouched, so one file
+supports both the constrained and unconstrained analyses. Two of the new
+branches matter when plotting:
+
+  * Bplus_ConsJpsi_status  zero means the fit converged; anything else means
+                           it did not, and that candidate must be cut away
+  * Bplus_ConsJpsi_M       the refitted mass
+
+Both are ARRAYS, not single numbers: DTF runs once per primary vertex
+candidate, and Bplus_ConsJpsi_nPV says how many entries there are. Index 0 is
+the best PV, which is why the plotting scripts read Bplus_ConsJpsi_M[0] with
+the cut Bplus_ConsJpsi_status[0]==0.
+
+--- A warning if you adapt this ---------------------------------------------
+
+The .done markers are keyed by index into FILELIST, not by filename. If you
+point this at a different or reordered file list, old markers will make chunks
+look finished that were never run with the new list, and merge() globs *.root
+from OUTDIR indiscriminately. Give any new tupling its own OUTDIR, or delete
+the markers first.
 """
 
 from __future__ import print_function
@@ -40,9 +98,11 @@ except ImportError:       # Python 3
     import queue
 
 # --------------------------------------------------------------------------
-FILELIST = 'filelist.txt'
-OPTIONS = 'ntuple_jpsidtf_all.py'
-OUTDIR = 'ntuples_jpsidtf'
+# These five lines are the only difference from run_parallel_all.py.
+# --------------------------------------------------------------------------
+FILELIST = 'filelist.txt'                  # XRootD URLs, one .dst per line
+OPTIONS = 'ntuple_jpsidtf_all.py'          # options file WITH the DTF tool
+OUTDIR = 'ntuples_jpsidtf'                 # own directory: see the warning above
 LOGDIR = 'logs_jpsidtf'
 MERGED = 'DVntuple_jpsidtf_all.root'
 
