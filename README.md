@@ -85,7 +85,7 @@ Selection: `Kplus_PIDK > 2`, `Bplus_DIRA_OWNPV > 0.9999`,
 | B⁺, loose cuts | 533 608 | 5284.14 ± 0.04 | 18.47 | 3.56 |
 | B⁺, full cuts | 365 237 | 5284.03 ± 0.03 | 12.33 | 1.21 |
 | B⁺, full cuts + DTF | 156 290 | 5280.81 ± 0.03 | 9.72 | 1.33 |
-| J/ψ, MagUp | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
+| J/ψ, MagUp | 994739 | 3100.10 ± 0.02 | 14.19 | 7.94 |
 | J/ψ, MagDown | 55 664 | 3099.13 ± 0.06 | 13.54 | 1.47 |
 
 The DTF row covers fewer candidates only because I parsed through fewer .dst files 
