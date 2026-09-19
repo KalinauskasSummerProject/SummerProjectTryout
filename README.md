@@ -69,8 +69,8 @@ Selection: `Kplus_PIDK > 2`, `Bplus_DIRA_OWNPV > 0.9999`,
 | B⁺, full cuts + DTF | 156 290 | 5280.81 ± 0.03 | 9.72 | 1.33 |
 | J/ψ, no cuts | 1 591 372 | 3100.24 ± 0.01 | 13.69 | 10.83 |
 
-The DTF row covers fewer candidates only because that ntuple is still being
-produced; it is not a selection effect.
+The DTF row covers fewer candidates only because I didn't parse through as many 
+.dst files with that ntuple; it is not a selection effect.
 
 A single Gaussian gives a clearly worse χ²/ndf than the double Gaussian on the
 same data, which is the justification for the extra two parameters. The
